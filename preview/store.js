@@ -23,3 +23,21 @@ export function currentTrip(state) {
   const candidates = matchingTrips(state);
   return candidates.find((trip) => trip.id === state.activeTripId) || candidates[0] || null;
 }
+
+export function skipTrip(state, tripId) {
+  if (!trips.some((trip) => trip.id === tripId) || state.skippedTripIds.includes(tripId)) return state;
+  return { ...state, skippedTripIds: [...state.skippedTripIds, tripId], activeTripId: null };
+}
+
+export function toggleSavedTrip(state, tripId) {
+  if (!trips.some((trip) => trip.id === tripId)) return state;
+  const saved = state.savedTripIds.includes(tripId);
+  const candidates = matchingTrips(state);
+  const currentIndex = candidates.findIndex((trip) => trip.id === tripId);
+  const nextTripId = currentIndex >= 0 ? candidates[(currentIndex + 1) % candidates.length]?.id ?? null : state.activeTripId;
+  return {
+    ...state,
+    savedTripIds: saved ? state.savedTripIds.filter((id) => id !== tripId) : [...state.savedTripIds, tripId],
+    activeTripId: saved ? state.activeTripId : nextTripId,
+  };
+}
