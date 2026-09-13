@@ -1,6 +1,8 @@
 import { sceneSvg, routeSvg, trips } from './data.js';
 import { createInitialState, currentTrip, toggleSavedTrip, skipTrip, copyTrip, removeCopiedStop, addOptionalStop, updateCopiedStopTime, updateCopiedBudget } from './store.js';
 
+document.documentElement.classList.toggle('device-preview', new URLSearchParams(window.location.search).has('device'));
+
 const app = document.querySelector('#app');
 const toast = document.querySelector('#toast');
 let state = createInitialState();

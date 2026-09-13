@@ -57,3 +57,11 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:3px soli
   #app .mobile-app::-webkit-scrollbar { display:none; }
   #app .bottom-nav { position:absolute; width:auto; padding-bottom:12px; }
 }
+
+html.device-preview body { display:grid; min-height:100vh; place-items:center; padding:12px; background:radial-gradient(circle at 30% 20%,#d6f3f6 0,transparent 30%),linear-gradient(130deg,#dceff0,var(--paper)); }
+html.device-preview #app { position:relative; width:min(454px,calc(100vw - 24px)); height:min(900px,calc(100vh - 24px)); overflow:hidden; border:9px solid #12191b; border-radius:48px; background:#12191b; box-shadow:0 28px 70px rgba(8,53,65,.32),0 0 0 1px rgba(255,255,255,.58); }
+html.device-preview #app::before { position:absolute; z-index:8; top:9px; left:50%; width:104px; height:28px; border-radius:0 0 17px 17px; background:#12191b; content:''; transform:translateX(-50%); }
+html.device-preview #app::after { position:absolute; z-index:8; bottom:7px; left:50%; width:108px; height:5px; border-radius:99px; background:#12191b; content:''; transform:translateX(-50%); }
+html.device-preview #app .mobile-app { width:100%; min-height:0; height:100%; overflow-y:auto; margin:0; padding-top:47px; padding-bottom:85px; scrollbar-width:none; }
+html.device-preview #app .mobile-app::-webkit-scrollbar { display:none; }
+html.device-preview #app .bottom-nav { position:absolute; width:auto; padding-bottom:10px; }
