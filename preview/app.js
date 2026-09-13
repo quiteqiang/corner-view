@@ -1,5 +1,5 @@
 import { sceneSvg, routeSvg, trips } from './data.js';
-import { createInitialState, currentTrip, toggleSavedTrip, skipTrip, copyTrip } from './store.js';
+import { createInitialState, currentTrip, toggleSavedTrip, skipTrip, copyTrip, removeCopiedStop, addOptionalStop, updateCopiedStopTime, updateCopiedBudget } from './store.js';
 
 const app = document.querySelector('#app');
 const toast = document.querySelector('#toast');
@@ -39,8 +39,9 @@ function renderMyTrip() {
   if (!trip) return `<section class="mobile-app"><header class="app-header"><h1 class="wordmark">口袋漫游<small>POCKET QUEST</small></h1><div class="profile-pixel">▟▙</div></header><section class="empty-state surface-card"><p class="eyebrow">MY ITINERARY</p><h2>还没有自己的行程</h2><p>从一趟真实旅行开始复制，再按你的节奏出发。</p><button class="pixel-button" type="button" data-tab="discover">去发现旅行</button></section></section>${nav()}`;
   const source = trips.find((item) => item.id === trip.sourceTripId);
   const days = Array.from({ length: trip.days }, (_, index) => index + 1);
-  const daily = Math.round(trip.budget / trip.days);
-  return `<section class="mobile-app my-trip-page"><header class="app-header"><div><h1 class="wordmark">我的行程<small>MADE FROM A REAL TRIP</small></h1></div><div class="profile-pixel">▟▙</div></header><p class="source-note">来源：${source.contributor} 的「${source.title}」</p><h2>${trip.title}</h2><p class="hero-copy">已复制到你的行程。下一步可按自己的节奏修改。</p><section class="my-trip-summary surface-card"><span><b>${trip.stops.length} 个地点</b><small>当前行程</small></span><span><b>RM ${trip.budget}</b><small>总预算</small></span><span><b>约 RM ${daily}/天</b><small>每日预算</small></span></section><section class="detail-route"><h2>我的路线</h2>${routeSvg(trip)}</section><section class="detail-section"><div class="section-heading"><h2>行程安排</h2><span>可在下一步 Remix</span></div>${days.map((day) => `<section class="day-block surface-card"><h3>第 ${day} 天</h3>${trip.stops.filter((stop) => stop.day === day).map((stop) => `<article class="stop-row"><time>${stop.time}</time><div><b>${stop.name}</b><p>${stop.note}</p></div><span>RM ${stop.cost}</span></article>`).join('') || '<p class="rest-day">留给自己的自由时间</p>'}</section>`).join('')}</section></section>${nav()}`;
+  const daily = trip.stops.length ? Math.round(trip.budget / trip.days) : null;
+  const optional = trip.optionalStops.filter((stop) => !trip.stops.some((current) => current.id === stop.id));
+  return `<section class="mobile-app my-trip-page"><header class="app-header"><div><h1 class="wordmark">我的行程<small>MADE FROM A REAL TRIP</small></h1></div><div class="profile-pixel">▟▙</div></header><p class="source-note">来源：${source.contributor} 的「${source.title}」</p><h2>${trip.title}</h2><p class="hero-copy">保留别人的经验，改成自己的节奏。</p><section class="my-trip-summary surface-card"><span><b>${trip.stops.length} 个地点</b><small>当前行程</small></span><span><b>RM ${trip.budget}</b><small>总预算</small></span><span><b>${daily === null ? '暂无每日预算' : `约 RM ${daily}/天`}</b><small>每日预算</small></span></section><section class="budget-editor surface-card"><label for="trip-budget">我的总预算</label><div><span>RM</span><input id="trip-budget" type="number" min="1" step="1" value="${trip.budget}" data-action="budget"></div></section><section class="detail-route"><h2>我的路线</h2>${routeSvg(trip)}</section><section class="detail-section"><div class="section-heading"><h2>行程安排</h2><span>修改后只影响自己</span></div>${days.map((day) => `<section class="day-block surface-card"><h3>第 ${day} 天</h3>${trip.stops.filter((stop) => stop.day === day).map((stop) => `<article class="stop-row remix-stop"><input type="time" value="${stop.time}" aria-label="${stop.name} 的时间" data-action="stop-time" data-stop-id="${stop.id}"><div><b>${stop.name}</b><p>${stop.note}</p></div><div class="stop-tools"><span>RM ${stop.cost}</span><button type="button" data-action="remove-stop" data-stop-id="${stop.id}">移除</button></div></article>`).join('') || '<p class="rest-day">留给自己的自由时间</p>'}</section>`).join('')}</section><section class="optional-stops surface-card"><div class="section-heading"><h2>加入一个地点</h2><span>可选</span></div>${optional.length ? optional.map((stop) => `<article><div><b>${stop.name}</b><p>第 ${stop.day} 天 · ${stop.time} · RM ${stop.cost}</p></div><button class="pixel-button secondary" type="button" data-action="add-stop" data-stop-id="${stop.id}">加入</button></article>`).join('') : '<p>这趟旅行的可选地点都已经加入。</p>'}</section></section>${nav()}`;
 }
 
 function renderPendingTab(label) { return `<section class="mobile-app"><header class="app-header"><h1 class="wordmark">口袋漫游<small>POCKET QUEST</small></h1><div class="profile-pixel">▟▙</div></header><section class="empty-state surface-card"><p class="eyebrow">${label.toUpperCase()}</p><h2>这个空间正在准备</h2><p>核心行程体验会优先完成。</p><button class="pixel-button secondary" data-tab="discover">回到发现</button></section></section>${nav()}`; }
@@ -50,11 +51,17 @@ function render({ focusSearch = false } = {}) { app.innerHTML = detailTripId ? r
 
 document.addEventListener('input', (event) => { if (event.target.id === 'search') { state.filters.search = event.target.value; state.activeTripId = null; render({ focusSearch: true }); } });
 document.addEventListener('change', (event) => { if (event.target.dataset.filter) { state.filters[event.target.dataset.filter] = event.target.value; state.activeTripId = null; render(); } });
+document.addEventListener('change', (event) => {
+  if (event.target.dataset.action === 'budget') { const previous = state.copiedTrip?.budget; state = updateCopiedBudget(state, event.target.value); render(); showToast(previous === state.copiedTrip?.budget ? '请输入大于 0 的预算' : '预算已更新'); }
+  if (event.target.dataset.action === 'stop-time') { state = updateCopiedStopTime(state, event.target.dataset.stopId, event.target.value); render(); showToast('时间已更新'); }
+});
 document.addEventListener('click', (event) => { const button = event.target.closest('button'); if (!button) return;
   if (button.dataset.action === 'reset-filters') { state.filters = createInitialState().filters; render(); }
   if (button.dataset.action === 'view-detail') { detailTripId = button.dataset.tripId; render(); }
   if (button.dataset.action === 'back') { detailTripId = null; render(); }
   if (button.dataset.action === 'copy') { state = copyTrip(state, button.dataset.tripId); detailTripId = null; render(); showToast('已复制到我的行程'); }
+  if (button.dataset.action === 'remove-stop') { state = removeCopiedStop(state, button.dataset.stopId); render(); showToast('已从我的行程移除'); }
+  if (button.dataset.action === 'add-stop') { state = addOptionalStop(state, button.dataset.stopId); render(); showToast('已加入我的行程'); }
   if (button.dataset.action === 'skip') { state = skipTrip(state, button.dataset.tripId); render(); showToast('已跳过这趟旅行'); }
   if (button.dataset.action === 'save') { const wasSaved = state.savedTripIds.includes(button.dataset.tripId); state = toggleSavedTrip(state, button.dataset.tripId); render(); showToast(wasSaved ? '已移出收藏' : '已收藏这趟旅行'); }
   if (button.dataset.pending) showToast('这个功能将在接下来的功能提交中上线。');

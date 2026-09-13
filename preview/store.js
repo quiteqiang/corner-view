@@ -54,3 +54,28 @@ export function copyTrip(state, tripId) {
   };
   return { ...state, copiedTrip, tab: 'my-trip' };
 }
+
+export function removeCopiedStop(state, stopId) {
+  if (!state.copiedTrip || !state.copiedTrip.stops.some((stop) => stop.id === stopId)) return state;
+  return { ...state, copiedTrip: { ...state.copiedTrip, stops: state.copiedTrip.stops.filter((stop) => stop.id !== stopId) } };
+}
+
+export function addOptionalStop(state, stopId) {
+  if (!state.copiedTrip || state.copiedTrip.stops.some((stop) => stop.id === stopId)) return state;
+  const optional = state.copiedTrip.optionalStops.find((stop) => stop.id === stopId);
+  if (!optional) return state;
+  return { ...state, copiedTrip: { ...state.copiedTrip, stops: [...state.copiedTrip.stops, structuredClone(optional)].sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)) } };
+}
+
+export function updateCopiedStopTime(state, stopId, time) {
+  if (!state.copiedTrip || !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) return state;
+  const exists = state.copiedTrip.stops.some((stop) => stop.id === stopId);
+  if (!exists) return state;
+  return { ...state, copiedTrip: { ...state.copiedTrip, stops: state.copiedTrip.stops.map((stop) => stop.id === stopId ? { ...stop, time } : stop).sort((a, b) => a.day - b.day || a.time.localeCompare(b.time)) } };
+}
+
+export function updateCopiedBudget(state, budget) {
+  const value = Number(budget);
+  if (!state.copiedTrip || !Number.isFinite(value) || value <= 0) return state;
+  return { ...state, copiedTrip: { ...state.copiedTrip, budget: value } };
+}
