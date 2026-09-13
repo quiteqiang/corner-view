@@ -41,3 +41,16 @@ export function toggleSavedTrip(state, tripId) {
     activeTripId: saved ? state.activeTripId : nextTripId,
   };
 }
+
+export function copyTrip(state, tripId) {
+  const source = trips.find((trip) => trip.id === tripId);
+  if (!source) return state;
+  const copiedTrip = {
+    ...structuredClone(source),
+    id: `mine-${source.id}`,
+    sourceTripId: source.id,
+    title: `${source.title} 的行程`,
+    budget: source.actualBudget,
+  };
+  return { ...state, copiedTrip, tab: 'my-trip' };
+}
