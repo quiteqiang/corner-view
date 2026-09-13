@@ -48,4 +48,12 @@ button:focus-visible,input:focus-visible,select:focus-visible { outline:3px soli
 .saved-title { margin:5px 0; font-size:28px; letter-spacing:-1.3px; }.saved-list { display:grid; gap:14px; margin-top:18px; }.saved-card { overflow:hidden; }.saved-art { height:125px; background:var(--cyan); }.saved-art svg { display:block; width:100%; height:100%; }.saved-content { padding:14px; }.saved-content .eyebrow { margin:0 0 7px; }.saved-content h3 { margin:0; font-size:19px; }.saved-content > p:not(.eyebrow) { margin:5px 0 11px; color:var(--ink-soft); font-size:12px; }.saved-meta { display:flex; gap:0; margin:0 -2px 12px; border-top:1px solid var(--line); border-bottom:1px solid var(--line); }.saved-meta span { flex:1; padding:8px 5px; color:var(--ink); font-size:10px; text-align:center; }.saved-meta span + span { border-left:1px solid var(--line); }.saved-actions { display:flex; gap:9px; }.saved-actions .pixel-button { flex:1; min-height:39px; padding:7px 10px; font-size:11px; }
 #toast { position:fixed; z-index:10; right:18px; bottom:calc(92px + var(--safe-bottom)); left:18px; max-width:394px; margin:auto; padding:13px 16px; border-radius:12px; background:var(--ink); color:white; font-size:13px; text-align:center; transform:translateY(20px); opacity:0; pointer-events:none; transition:.2s ease; }
 #toast.visible { transform:translateY(0); opacity:1; }
-@media (min-width:721px) { body { background:linear-gradient(130deg,#e9f6f7,var(--paper)); } .mobile-app { min-height:780px; box-shadow:0 0 0 1px var(--line),0 24px 60px rgba(9,53,65,.18); } }
+@media (min-width:721px) {
+  body { display:grid; min-height:100vh; place-items:center; padding:24px; background:radial-gradient(circle at 30% 20%,#d6f3f6 0,transparent 30%),linear-gradient(130deg,#dceff0,var(--paper)); }
+  #app { position:relative; width:454px; height:min(900px,calc(100vh - 48px)); overflow:hidden; border:11px solid #12191b; border-radius:55px; background:#12191b; box-shadow:0 28px 70px rgba(8,53,65,.32),0 0 0 1px rgba(255,255,255,.58); }
+  #app::before { position:absolute; z-index:8; top:11px; left:50%; width:118px; height:31px; border-radius:0 0 19px 19px; background:#12191b; content:''; transform:translateX(-50%); }
+  #app::after { position:absolute; z-index:8; bottom:8px; left:50%; width:120px; height:5px; border-radius:99px; background:#12191b; content:''; transform:translateX(-50%); }
+  #app .mobile-app { width:100%; min-height:0; height:100%; overflow-y:auto; margin:0; padding-top:50px; padding-bottom:89px; scrollbar-width:none; }
+  #app .mobile-app::-webkit-scrollbar { display:none; }
+  #app .bottom-nav { position:absolute; width:auto; padding-bottom:12px; }
+}
